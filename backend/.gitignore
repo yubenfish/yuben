@@ -1,0 +1,17 @@
+# Maven
+target/
+*.class
+*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# H2 数据库（运行时数据，不入库）
+data/*.mv.db
+data/*.lock.db
+data/*.trace.db
+
+# Trae 临时文件
+.trae/

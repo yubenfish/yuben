@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万物商城 · 管理后台</title>
+<!-- 🆕 Chart.js + 库存预警表 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  /* ===== 管理端全局变量 ===== */
+  :root {
+    --admin-primary: #4f46e5;
+    --admin-primary-light: #6366f1;
+    --admin-sidebar: #1e1b4b;
+    --admin-sidebar-hover: #312e81;
+    --admin-bg: #f5f7fb;
+    --admin-card: #ffffff;
+    --admin-text: #1f2937;
+    --admin-muted: #6b7280;
+    --admin-border: #e5e7eb;
+    --admin-success: #10b981;
+    --admin-danger: #ef4444;
+    --admin-warning: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+         background: var(--admin-bg); color: var(--admin-text); font-size: 14px; }
+
+  /* ===== 登录页 ===== */
+  #loginPage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+               background: linear-gradient(135deg,#1e1b4b 0%,#4f46e5 100%); z-index: 1000; }
+  .login-card { background: #fff; border-radius: 16px; padding: 40px; width: 380px;
+                 box-shadow: 0 25px 50px rgba(0,0,0,.2); }
+  .login-card h2 { text-align: center; margin-bottom: 6px; color: var(--admin-sidebar); }
+  .login-card .sub { text-align: center; color: var(--admin-muted); margin-bottom: 30px; font-size: 13px; }
+  .login-card label { display: block; font-size: 13px; color: var(--admin-muted); margin-bottom: 6px; margin-top: 14px; }
+  .login-card input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--admin-border); border-radius: 10px;
+                      font-size: 14px; transition: all .2s; }
+  .login-card input:focus { outline: none; border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+  .login-card button { width: 100%; padding: 12px; background: var(--admin-primary); color: #fff; border: none;
+                       border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 24px;
+                       transition: all .2s; }
+  .login-card button:hover { background: var(--admin-primary-light); }
+  .login-tip { text-align: center; margin-top: 20px; font-size: 12px; color: #9ca3af; }
+  .login-tip code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+
+  /* ===== 布局 ===== */
+  #app { display: none; }
+  .layout { display: flex; min-height: 100vh; }
+
+  /* 侧边栏 */
+  .sidebar { width: 220px; background: var(--admin-sidebar); color: #fff; position: fixed; height: 100vh; overflow-y: auto; }
+  .sidebar-brand { padding: 22px 24px; font-size: 16px; font-weight: 700;
+                   border-bottom: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; gap: 10px; }
+  .sidebar-brand .logo { width: 32px; height: 32px; background: linear-gradient(135deg,#6366f1,#a78bfa);
+                         border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .sidebar-menu { padding: 12px 0; }
+  .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 11px 24px; cursor: pointer;
+                  color: rgba(255,255,255,.65); font-size: 13.5px; transition: all .15s; border-left: 3px solid transparent; }
+  .sidebar-item:hover { background: var(--admin-sidebar-hover); color: #fff; }
+  .sidebar-item.active { background: var(--admin-sidebar-hover); color: #fff; border-left-color: var(--admin-primary-light); }
+  .sidebar-item svg { width: 18px; height: 18px; }
+
+  /* 主区域 */
+  .main { margin-left: 220px; flex: 1; }
+  .topbar { background: #fff; padding: 14px 28px; border-bottom: 1px solid var(--admin-border);
+            display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .topbar-title { font-size: 17px; font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .admin-info { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--admin-muted); }
+  .admin-info .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--admin-primary);
+                        color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+  .logout-btn { padding: 6px 14px; border: 1px solid var(--admin-border); background: #fff; border-radius: 8px;
+                font-size: 13px; cursor: pointer; color: var(--admin-muted); transition: all .2s; }
+  .logout-btn:hover { border-color: var(--admin-danger); color: var(--admin-danger); }
+
+  .content { padding: 28px; }
+
+  /* ===== 仪表盘卡片 ===== */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 18px; margin-bottom: 28px; }
+  .stat-card { background: var(--admin-card); border-radius: 12px; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+               border: 1px solid var(--admin-border); }
+  .stat-card .label { font-size: 13px; color: var(--admin-muted); margin-bottom: 8px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: var(--admin-text); }
+  .stat-card .icon { float: right; font-size: 32px; opacity: .7; }
+  .stat-card.revenue .value { color: var(--admin-primary); }
+  .stat-card.success .value { color: var(--admin-success); }
+  .stat-card.warning .value { color: var(--admin-warning); }
+  .stat-card.danger .value { color: var(--admin-danger); }
+
+  .charts { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--admin-card); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+           border: 1px solid var(--admin-border); padding: 22px; }
+  .panel-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+
+  /* 状态分布条 */
+  .bar-row { margin-bottom: 12px; }
+  .bar-row .head { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .bar-row .track { height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+  .bar-row .fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+
+  /* Top Selling */
+  .top-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--admin-border); }
+  .top-item:last-child { border: none; }
+  .top-item .rank { width: 28px; height: 28px; border-radius: 8px; background: #f3f4f6; color: var(--admin-muted);
+                    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+  .top-item:nth-child(1) .rank { background: linear-gradient(135deg,#fbbf24,#f59e0b); color: #fff; }
+  .top-item:nth-child(2) .rank { background: linear-gradient(135deg,#94a3b8,#64748b); color: #fff; }
+  .top-item:nth-child(3) .rank { background: linear-gradient(135deg,#d97706,#b45309); color: #fff; }
+  .top-item .emoji { font-size: 26px; }
+  .top-item .info { flex: 1; min-width: 0; }
+  .top-item .name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-item .sold { font-size: 12px; color: var(--admin-muted); }
+
+  /* ===== 表格页 ===== */
+  .table-bar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+  .table-bar input, .table-bar select { padding: 8px 12px; border: 1px solid var(--admin-border); border-radius: 8px;
+                                        font-size: 13px; }
+  .table-bar input { flex: 1; max-width: 320px; }
+  .btn { padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;
+         font-weight: 600; transition: all .2s; }
+  .btn-primary { background: var(--admin-primary); color: #fff; }
+  .btn-primary:hover { background: var(--admin-primary-light); }
+  .btn-success { background: var(--admin-success); color: #fff; }
+  .btn-warning { background: var(--admin-warning); color: #fff; }
+  .btn-danger { background: var(--admin-danger); color: #fff; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-ghost { background: transparent; border: 1px solid var(--admin-border); color: var(--admin-muted); }
+
+  /* 🆕 商品上架/下架开关 */
+  .toggle-switch {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px 3px 4px; border-radius: 14px;
+    border: 1px solid #e5e7eb; cursor: pointer;
+    font-size: 11px; font-weight: 600;
+    background: #f3f4f6; color: #9ca3af;
+    transition: all .15s; margin-right: 4px;
+    font-family: inherit;
+  }
+  .toggle-switch .switch-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #d1d5db; transition: all .15s; flex-shrink: 0;
+  }
+  .toggle-switch.on {
+    background: linear-gradient(135deg,#10b981,#34d399);
+    border-color: #10b981; color: #fff;
+  }
+  .toggle-switch.on .switch-dot { background: #fff; }
+  .toggle-switch.off { background: #fef2f2; border-color: #fecaca; color: #ef4444; }
+  .toggle-switch.off .switch-dot { background: #ef4444; }
+  .toggle-switch:hover { transform: scale(1.04); }
+
+  .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .admin-table th { text-align: left; padding: 12px; background: #f9fafb; font-weight: 600; color: #374151;
+                    border-bottom: 2px solid var(--admin-border); font-size: 12.5px; }
+  .admin-table td { padding: 12px; border-bottom: 1px solid #f3f4f6; color: var(--admin-text); }
+  .admin-table tbody tr:hover { background: #fafbfc; }
+
+  .tag { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .tag-paid { background: #dbeafe; color: #1d4ed8; }
+  .tag-shipped { background: #fef3c7; color: #b45309; }
+  .tag-done { background: #d1fae5; color: #047857; }
+  .tag-cancelled { background: #fee2e2; color: #b91c1c; }
+
+  /* Modal */
+  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none;
+                align-items: center; justify-content: center; z-index: 100; }
+  .modal-mask.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 14px; width: 520px; max-height: 85vh; overflow-y: auto;
+               box-shadow: 0 25px 50px rgba(0,0,0,.2); }
+  .modal-head { padding: 18px 22px; border-bottom: 1px solid var(--admin-border); display: flex;
+                justify-content: space-between; align-items: center; }
+  .modal-head h3 { font-size: 16px; }
+  .modal-head .close { cursor: pointer; color: var(--admin-muted); font-size: 20px; border: none; background: none; }
+  .modal-body { padding: 22px; }
+  .form-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .form-row label { width: 100px; font-size: 13px; color: var(--admin-muted); }
+  .form-row input, .form-row select, .form-row textarea {
+    flex: 1; padding: 8px 12px; border: 1px solid var(--admin-border); border-radius: 8px; font-size: 13px; font-family: inherit;
+  }
+  .form-row textarea { min-height: 70px; resize: vertical; }
+  .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ========== 登录页 ========== -->
+<div id="loginPage">
+  <div class="login-card">
+    <h2>万物商城 · 管理后台</h2>
+    <p class="sub">Spring Boot + MySQL · 数据驱动</p>
+    <label>管理员账号</label>
+    <input id="adminUser" placeholder="admin" value="admin">
+    <label>密码</label>
+    <input id="adminPass" type="password" placeholder="admin123" value="admin123">
+    <button onclick="adminLogin()">登 录</button>
+    <p class="login-tip">演示账号：<code>admin</code> / <code>admin123</code><br>或先用前台注册任意账号</p>
+  </div>
+</div>
+
+<!-- ========== 主界面 ========== -->
+<div id="app" class="layout">
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">🛒</div>
+      万物商城管理
+    </div>
+    <nav class="sidebar-menu">
+      <div class="sidebar-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        仪表盘
+      </div>
+      <div class="sidebar-item" data-page="products">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        商品管理
+      </div>
+      <div class="sidebar-item" data-page="orders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/></svg>
+        订单管理
+      </div>
+      <div class="sidebar-item" data-page="users">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        用户管理
+      </div>
+      <div class="sidebar-item" onclick="window.location.href='index.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        返回前台
+      </div>
+    </nav>
+  </aside>
+
+  <!-- 主区域 -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">仪表盘</div>
+      <div class="topbar-right">
+        <div class="admin-info">
+          <div class="avatar">A</div>
+          <span id="adminName">管理员</span>
+        </div>
+        <button class="logout-btn" onclick="location.reload()">退出</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ 仪表盘 ============ -->
+      <section id="page-dashboard">
+        <div class="cards">
+          <div class="stat-card revenue"><div class="icon">💰</div><div class="label">总营收</div><div class="value" id="cardRevenue">¥0</div></div>
+          <div class="stat-card success"><div class="icon">📦</div><div class="label">商品数</div><div class="value" id="cardProducts">0</div></div>
+          <div class="stat-card warning"><div class="icon">📋</div><div class="label">订单数</div><div class="value" id="cardOrders">0</div></div>
+          <div class="stat-card danger"><div class="icon">👥</div><div class="label">注册用户</div><div class="value" id="cardUsers">0</div></div>
+        </div>
+
+        <div class="charts">
+          <div class="panel">
+            <div class="panel-title">📊 商品分类分布</div>
+            <canvas id="chartCat" height="220"></canvas>
+          </div>
+          <div class="panel">
+            <div class="panel-title">🏆 热销商品 Top 5</div>
+            <canvas id="chartTop" height="220"></canvas>
+          </div>
+        </div>
+
+        <!-- 🆕 库存预警 + 最近订单 -->
+        <div class="charts" style="grid-template-columns: 1fr 1fr;">
+          <div class="panel">
+            <div class="panel-title">⚠️ 库存预警 <span style="font-weight:400;color:#999;font-size:12px;">（库存 < 10）</span></div>
+            <div id="lowStockTable"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">🕐 最近订单</div>
+            <div id="recentOrdersTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 商品管理 ============ -->
+      <section id="page-products" class="hidden">
+        <div class="table-bar">
+          <input id="pSearch" placeholder="搜索商品名..." oninput="renderProducts()">
+          <select id="pCat" onchange="renderProducts()">
+            <option value="">全部分类</option>
+            <option value="digital">数码家电</option>
+            <option value="fashion">服饰鞋包</option>
+            <option value="home">家居生活</option>
+            <option value="beauty">美妆个护</option>
+          </select>
+          <button class="btn btn-primary" onclick="showProductForm()">+ 新增商品</button>
+        </div>
+        <div class="panel" style="padding:0;">
+          <table class="admin-table">
+            <thead><tr>
+              <th>ID</th><th>图标</th><th>商品名</th><th>分类</th><th>价格</th><th>库存</th><th>销量</th><th>评分</th><th>操作</th>
+            </tr></thead>
+            <tbody id="productsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ 订单管理 ============ -->
+      <section id="page-orders" class="hidden">
+        <div class="table-bar">
+          <select id="oStatus" onchange="renderOrders()">
+            <option value="">全部状态</option>
+            <option value="PAID">已支付</option>
+            <option value="SHIPPED">已发货</option>
+            <option value="DONE">已完成</option>
+            <option value="CANCELLED">已取消</option>
+          </select>
+          <button class="btn btn-ghost" onclick="renderOrders()">刷新</button>
+        </div>
+        <div class="panel" style="padding:0;">
+          <table class="admin-table">
+            <thead><tr>
+              <th>订单号</th><th>用户</th><th>金额</th><th>状态</th><th>下单时间</th><th>操作</th>
+            </tr></thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ 用户管理 ============ -->
+      <section id="page-users" class="hidden">
+        <div class="panel" style="padding:0;">
+          <table class="admin-table">
+            <thead><tr>
+              <th>ID</th><th>用户名</th><th>昵称</th><th>注册时间</th><th>状态</th>
+            </tr></thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ========== Modal ========== -->
+<div class="modal-mask" id="modalMask" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script>
+/* ========== 配置 ========== */
+const API = 'http://localhost:8081';
+const ADMIN_KEY = 'admin123';   // 🆕 管理员鉴权 key，后端 shop.admin.key 配置
+const $ = id => document.getElementById(id);
+const catMap = {digital:'数码',fashion:'服饰',home:'家居',beauty:'美妆',food:'生鲜',sport:'运动',book:'图书',baby:'母婴'};
+const statusMap = {PAID:'已支付',SHIPPED:'已发货',DONE:'已完成',CANCELLED:'已取消'};
+
+/* 🆕 管理员请求 wrapper —— 自动加 X-Admin-Key header */
+async function adminFetch(url, options = {}) {
+    const headers = options.headers ? { ...options.headers } : {};
+    headers['X-Admin-Key'] = ADMIN_KEY;
+    if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+    return fetch(url, { ...options, headers });
+}
+
+/* ========== 登录 ========== */
+function adminLogin() {
+  const u = $('adminUser').value.trim();
+  const p = $('adminPass').value.trim();
+  if (!u || !p) { alert('请输入账号密码'); return; }
+  if (u === 'admin' && p === 'admin123') {
+    enterApp(u); return;
+  }
+  // 否则尝试普通账号登录
+  fetch(API + '/api/user/login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username:u, password:p})
+  }).then(r => r.json()).then(d => {
+    if (d.code === 0) enterApp(u);
+    else { alert('登录失败：' + d.message); }
+  }).catch(() => { alert('无法连接后端'); });
+}
+function enterApp(name) {
+  $('loginPage').style.display = 'none';
+  $('app').style.display = 'flex';
+  $('adminName').textContent = name;
+  switchPage('dashboard');
+}
+
+/* ========== 页面切换 ========== */
+document.querySelectorAll('.sidebar-item[data-page]').forEach(item => {
+  item.addEventListener('click', () => switchPage(item.dataset.page));
+});
+function switchPage(p) {
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.querySelector(`.sidebar-item[data-page="${p}"]`).classList.add('active');
+  document.querySelectorAll('[id^="page-"]').forEach(s => s.classList.add('hidden'));
+  $('page-' + p).classList.remove('hidden');
+  const titles = {dashboard:'仪表盘', products:'商品管理', orders:'订单管理', users:'用户管理'};
+  $('pageTitle').textContent = titles[p];
+  if (p === 'dashboard') renderDashboard();
+  if (p === 'products') renderProducts();
+  if (p === 'orders') renderOrders();
+  if (p === 'users') renderUsers();
+}
+
+/* ========== 仪表盘 ========== */
+let _chartCat = null, _chartTop = null;  // 全局引用防重复创建
+const _CAT_NAME = { digital:'数码家电', fashion:'服饰鞋包', food:'生鲜食品', home:'家居生活', beauty:'美妆个护', sport:'运动户外', book:'图书文娱', baby:'母婴玩具' };
+
+async function renderDashboard() {
+  try {
+    const r = await adminFetch(API + '/api/admin/dashboard');
+    const d = (await r.json()).data;
+    const cards = d.cards;
+
+    // ===== 4 张 KPI 卡片 =====
+    $('cardRevenue').textContent = '¥' + Number(cards.totalRevenue || 0).toLocaleString();
+    $('cardProducts').textContent = cards.totalProducts;
+    $('cardOrders').textContent = cards.totalOrders;
+    $('cardUsers').textContent = cards.totalUsers;
+
+    // ===== 🆕 分类分布饼图 =====
+    const catMap = d.catDist || {};
+    const catLabels = Object.keys(catMap).map(k => _CAT_NAME[k] || k);
+    const catValues = Object.values(catMap);
+    const catColors = ['#6366f1','#f59e0b','#10b981','#ef4444','#06b6d4','#ec4899','#8b5cf6','#84cc16'];
+    if (_chartCat) _chartCat.destroy();
+    _chartCat = new Chart($('chartCat'), {
+      type: 'doughnut',
+      data: { labels: catLabels, datasets: [{ data: catValues, backgroundColor: catColors, borderWidth: 2, borderColor: '#fff' }] },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+      }
+    });
+
+    // ===== 🆕 热销 Top 5 柱图（修复 native query 大写 key：NAME/PRICE/SOLD）=====
+    const topRaw = d.topSelling || [];
+    const topNormalized = topRaw.map(row => ({
+      name: row.NAME ?? row.name ?? '未命名',
+      emoji: row.EMOJI ?? row.emoji ?? '📦',
+      price: row.PRICE ?? row.price ?? 0,
+      sold: row.SOLD ?? row.sold ?? 0,
+      productId: row.PRODUCTID ?? row.productId
+    }));
+    const topLabels = topNormalized.map(p => (p.emoji + ' ' + p.name).slice(0, 14));
+    const topValues = topNormalized.map(p => p.sold);
+    if (_chartTop) _chartTop.destroy();
+    _chartTop = new Chart($('chartTop'), {
+      type: 'bar',
+      data: {
+        labels: topLabels.length ? topLabels : ['暂无数据'],
+        datasets: [{
+          label: '销量', data: topValues.length ? topValues : [0],
+          backgroundColor: 'rgba(99,102,241,.75)', borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true, indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+      }
+    });
+
+    // ===== 🆕 库存预警 =====
+    try {
+      const rs = await adminFetch(API + '/api/admin/dashboard/low-stock?threshold=10');
+      const lowList = (await rs.json()).data || [];
+      $('lowStockTable').innerHTML = lowList.length ? lowList.map(p => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+          <div><span style="font-size:16px;margin-right:6px;">${p.emoji||'📦'}</span>${p.name}</div>
+          <span style="font-weight:600;color:${p.stock<=3?'#ef4444':'#f59e0b'};">仅剩 ${p.stock} 件</span>
+        </div>`).join('') :
+        `<div style="color:#10b981;text-align:center;padding:24px 12px;font-size:14px;">✅ 所有商品库存充足 🎉</div>`;
+    } catch(e) { $('lowStockTable').innerHTML = '<div style="color:#ef4444;">加载失败</div>'; }
+
+    // ===== 🆕 最近订单（简化列表）=====
+    const orders = d.recentOrders || [];
+    $('recentOrdersTable').innerHTML = orders.length ? orders.map(o => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:12px;">
+        <div><span style="color:#6366f1;font-family:monospace;">#${o.orderNo?.slice(-6)}</span><span style="margin-left:8px;color:#64748b;">¥${o.total}</span></div>
+        <span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;
+          background:${o.status==='DONE'?'#dcfce7':o.status==='PAID'?'#dbeafe':o.status==='SHIPPED'?'#fef3c7':'#f1f5f9'};
+          color:${o.status==='DONE'?'#15803d':o.status==='PAID'?'#1d4ed8':o.status==='SHIPPED'?'#b45309':'#64748b'};">
+          ${statusMap[o.status]||o.status}
+        </span>
+      </div>`).join('') :
+      `<div style="color:#94a3b8;text-align:center;padding:24px 12px;">暂无订单</div>`;
+
+  } catch(e) { console.error(e); }
+}
+
+/* ========== 商品管理 ========== */
+let allProducts = [];
+async function loadProducts() {
+  const params = new URLSearchParams();
+  const kw = $('pSearch')?.value.trim();
+  const cat = $('pCat')?.value;
+  if (cat) params.set('cat', cat);
+  if (kw) params.set('keyword', kw);
+  // 🆕 改走 /api/admin/products —— 返回全部（含已下架），AdminAuthInterceptor 保护
+  const r = await adminFetch(API + '/api/admin/products?' + params + '&size=100');
+  const d = (await r.json()).data;
+  return Array.isArray(d) ? d : (d.items || []);
+}
+async function renderProducts() {
+  allProducts = await loadProducts();
+  $('productsBody').innerHTML = allProducts.map(p => {
+    const enabled = p.enabled !== false;
+    return `
+    <tr style="${!enabled ? 'opacity:.55;background:#fef2f2;' : ''}">
+      <td>#${p.id}</td>
+      <td style="font-size:24px;">${p.emoji||'📦'}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</td>
+      <td>${catMap[p.cat]||p.cat||'-'}</td>
+      <td><b>¥${p.price}</b></td>
+      <td>${p.stock}</td>
+      <td>${p.sales||0}</td>
+      <td>⭐ ${p.rating||4.8}</td>
+      <td>
+        <!-- 🆕 上架/下架开关 -->
+        <button class="toggle-switch ${enabled?'on':'off'}"
+                onclick="toggleProduct(${p.id}, this)"
+                title="${enabled?'点击下架':'点击上架'}">
+          <span class="switch-dot"></span>
+          <span class="switch-label">${enabled?'上架':'下架'}</span>
+        </button>
+        <button class="btn btn-sm btn-ghost" onclick='showProductForm(${JSON.stringify(p).replace(/'/g,"&#39;")})'>编辑</button>
+        <button class="btn btn-sm btn-danger" onclick="delProduct(${p.id})">删除</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;padding:40px;color:#999;">无商品</td></tr>';
+}
+/* 🆕 商品上架/下架切换 */
+async function toggleProduct(id, btn) {
+  try {
+    const r = await adminFetch(API + '/api/admin/products/' + id + '/toggle', { method: 'POST' });
+    const j = await r.json();
+    if (j.code === 0) {
+      const newEnabled = j.data.enabled !== false;
+      btn.classList.toggle('on', newEnabled);
+      btn.classList.toggle('off', !newEnabled);
+      btn.querySelector('.switch-label').textContent = newEnabled ? '上架' : '下架';
+      btn.title = newEnabled ? '点击下架' : '点击上架';
+      const row = btn.closest('tr');
+      row.style.opacity = newEnabled ? '1' : '.55';
+      row.style.background = newEnabled ? '' : '#fef2f2';
+      showToast(newEnabled ? '✅ 已上架' : '🚫 已下架');
+    }
+  } catch(e) { showToast('操作失败：' + (e.message||'')); }
+}
+function showProductForm(p) {
+  const isNew = !p || !p.id;
+  const d = p || { name:'',price:'',oldPrice:'',emoji:'📦',cat:'digital',bg:'linear-gradient(135deg,#e6f4ff,#bae0ff)',stock:999,description:'' };
+  openModal(`
+    <div class="modal-head"><h3>${isNew?'新增':'编辑'}商品</h3><button class="close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>商品名</label><input id="f_name" value="${d.name||''}"></div>
+      <div class="form-row"><label>价格</label><input id="f_price" type="number" value="${d.price||''}"></div>
+      <div class="form-row"><label>原价</label><input id="f_oldPrice" type="number" value="${d.oldPrice||''}"></div>
+      <div class="form-row"><label>Emoji</label><input id="f_emoji" value="${d.emoji||'📦'}"></div>
+      <div class="form-row"><label>分类</label>
+        <select id="f_cat">
+          ${Object.entries(catMap).map(([k,v])=>`<option value="${k}" ${k===d.cat?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row"><label>库存</label><input id="f_stock" type="number" value="${d.stock??999}"></div>
+      <div class="form-row"><label>描述</label><textarea id="f_desc">${d.description||''}</textarea></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveProduct(${d.id||0})">保存</button>
+      </div>
+    </div>`);
+}
+async function saveProduct(id) {
+  const d = {
+    name: $('f_name').value.trim(),
+    price: Number($('f_price').value),
+    oldPrice: Number($('f_oldPrice').value)||null,
+    emoji: $('f_emoji').value,
+    cat: $('f_cat').value,
+    stock: Number($('f_stock').value),
+    description: $('f_desc').value,
+  };
+  const url = id ? API + '/api/products/' + id : API + '/api/products';
+  const r = await fetch(url, { method: id?'PUT':'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(d) });
+  const j = await r.json();
+  if (j.code === 0) { closeModal(); renderProducts(); renderDashboard(); }
+  else alert('保存失败：' + j.message);
+}
+async function delProduct(id) {
+  if (!confirm('确认删除商品 #' + id + '？')) return;
+  await adminFetch(API + '/api/products/' + id, { method: 'DELETE' });
+  renderProducts(); renderDashboard();
+}
+
+/* ========== 订单管理 ========== */
+async function renderOrders() {
+  const r = await adminFetch(API + '/api/orders?size=100');
+  const list = (await r.json()).data.orders || [];
+  const st = $('oStatus').value;
+  const filtered = st ? list.filter(o => o.status === st) : list;
+  $('ordersBody').innerHTML = filtered.map(o => `
+    <tr>
+      <td style="font-family:monospace;font-size:12px;">${o.orderNo}</td>
+      <td>#${o.userId||'-'}</td>
+      <td><b>¥${o.total}</b></td>
+      <td><span class="tag tag-${o.status.toLowerCase()}">${statusMap[o.status]||o.status}</span></td>
+      <td style="font-size:12px;">${(o.createdAt||'').replace('T',' ').substring(0,16)}</td>
+      <td>${orderActions(o)}</td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:40px;color:#999;">无订单</td></tr>';
+}
+function orderActions(o) {
+  const n = o.orderNo;
+  if (o.status === 'PAID') return `<button class="btn btn-sm btn-warning" onclick="apiPut('/api/orders/${n}/ship')">发货</button>`;
+  if (o.status === 'SHIPPED') return `<button class="btn btn-sm btn-success" onclick="apiPut('/api/orders/${n}/done')">完成</button>`;
+  if (o.status === 'DONE') return '<span style="color:#10b981;font-size:12px;">✓ 已完成</span>';
+  return '<span style="color:#999;font-size:12px;">已取消</span>';
+}
+async function apiPut(path, body) {
+  await adminFetch(API + path, { method:'PUT', headers:{'Content-Type':'application/json'}, body: body?JSON.stringify(body):'{}' });
+  renderOrders(); renderDashboard();
+}
+
+/* ========== 用户管理 ========== */
+async function renderUsers() {
+  const r = await adminFetch(API + '/api/user/list?size=100', {method:'GET'});
+  let users = [];
+  try {
+    const d = (await r.json()).data;
+    users = Array.isArray(d) ? d : (d.items || []);
+  } catch(e) {}
+  // Fallback: 从订单里取 userId 去重
+  if (!users.length) {
+    const or = await adminFetch(API + '/api/orders?size=100').then(r => r.json());
+    const ids = [...new Set((or.data?.orders||[]).map(o=>o.userId).filter(Boolean))];
+    users = ids.map((id,i) => ({ id, username:'user_'+id, nickname:'用户'+id, createdAt:'', status:'active' }));
+  }
+  $('usersBody').innerHTML = users.map(u => `
+    <tr>
+      <td>#${u.id}</td>
+      <td>${u.username||'-'}</td>
+      <td>${u.nickname||'-'}</td>
+      <td style="font-size:12px;">${(u.createdAt||'').replace('T',' ').substring(0,16)||'-'}</td>
+      <td><span class="tag tag-done">正常</span></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:40px;color:#999;">暂无注册用户</td></tr>';
+}
+
+/* ========== Modal ========== */
+function openModal(html) {
+  $('modalBox').innerHTML = html;
+  $('modalMask').classList.add('show');
+}
+function closeModal() { $('modalMask').classList.remove('show'); }
+</script>
+</body>
+</html>

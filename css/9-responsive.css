@@ -1,0 +1,27 @@
+/* =========================================================
+   9-responsive.css  —  响应式断点 (1024px / 768px)
+   ========================================================= */
+
+/* ---------- 平板 ---------- */
+@media (max-width: 1024px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .category-menu { display: none; }
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .footer-inner { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------- 手机 ---------- */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .banner { padding: 40px 28px; min-height: 260px; }
+  .banner h1 { font-size: 28px; }
+  .banner p { font-size: 14px; margin-bottom: 20px; }
+  .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .product-info { padding: 12px; }
+  .product-name { font-size: 13px; }
+  .price-now { font-size: 18px; }
+  .cart-drawer { width: 100%; right: -100%; }
+  .features-grid { grid-template-columns: 1fr; padding: 20px; }
+  .footer-inner { grid-template-columns: 1fr; gap: 28px; }
+  .section-title h2 { font-size: 18px; }
+}

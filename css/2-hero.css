@@ -1,0 +1,128 @@
+/* =========================================================
+   2-hero.css  —  Hero 区 (分类侧栏 + 大促 Banner)
+   ========================================================= */
+
+/* ---------- Hero 容器 ---------- */
+.hero {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 0;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+}
+
+/* ---------- 分类菜单 ---------- */
+.category-menu {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px 0;
+  box-shadow: var(--shadow-sm);
+  height: fit-content;
+}
+.category-title {
+  padding: 8px 20px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all .2s var(--transition);
+  position: relative;
+}
+.category-item:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.category-item .cat-icon {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.category-item .arrow {
+  margin-left: auto;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity .2s var(--transition);
+}
+.category-item:hover .arrow { opacity: 1; }
+
+/* ---------- 大促 Banner ---------- */
+.banner {
+  background: linear-gradient(135deg, #1a1a2e 0%, #ff4d4f 100%);
+  border-radius: var(--radius-lg);
+  padding: 56px 48px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+/* Banner 装饰光晕 */
+.banner::before {
+  content: '';
+  position: absolute;
+  top: -50%; right: -20%;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(255,122,69,0.4) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.banner::after {
+  content: '';
+  position: absolute;
+  bottom: -30%; right: 10%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.banner-content { position: relative; z-index: 1; max-width: 520px; }
+.banner-tag {
+  display: inline-block;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+.banner h1 {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+.banner h1 span { color: #ffd666; }
+.banner p {
+  font-size: 16px;
+  opacity: 0.9;
+  margin-bottom: 28px;
+}
+.banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: #fff;
+  color: var(--primary);
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  transition: transform .2s var(--transition);
+}
+.banner-btn:hover { transform: translateY(-2px); }

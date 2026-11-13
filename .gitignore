@@ -1,0 +1,39 @@
+# ===== Maven / Java =====
+backend/target/
+backend/*.iml
+backend/.idea/
+*.iml
+*.class
+*.jar
+*.war
+*.log
+.mvn/wrapper/maven-wrapper.jar
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.iws
+*.ipr
+out/
+
+# ===== Node =====
+node_modules/
+npm-debug.log*
+
+# ===== 运行时数据（H2 / MySQL / Redis）=====
+data/
+*.mv.db
+*.trace.db
+
+# ===== Trae IDE 产物 =====
+.trae/
+.trae-html-share-packages/
+
+# ===== 运行日志 =====
+backend-run.err
+*.run.err
+*.run.out
+
+# ===== 系统文件 =====
+.DS_Store
+Thumbs.db

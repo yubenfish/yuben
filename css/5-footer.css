@@ -1,0 +1,40 @@
+/* =========================================================
+   5-footer.css  —  底部 Footer
+   ========================================================= */
+
+footer {
+  margin-top: 60px;
+  background: #1a1a2e;
+  color: rgba(255,255,255,0.7);
+  padding: 48px 24px 24px;
+}
+.footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px;
+}
+.footer-brand .logo { color: #fff; margin-bottom: 12px; }
+.footer-brand p { font-size: 14px; line-height: 1.8; max-width: 320px; }
+.footer-col h4 {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.footer-col a {
+  display: block;
+  font-size: 14px;
+  padding: 6px 0;
+  transition: color .2s var(--transition);
+}
+.footer-col a:hover { color: #fff; }
+.footer-bottom {
+  max-width: 1280px;
+  margin: 40px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  text-align: center;
+  font-size: 13px;
+}

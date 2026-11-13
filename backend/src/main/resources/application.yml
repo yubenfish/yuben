@@ -1,0 +1,66 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: ecommerce-demo
+
+  # ====== 默认走 MySQL ======
+  datasource:
+    url: jdbc:mysql://localhost:3306/shop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password:
+
+  # ====== 🆕 Redis（装了自动启用；没装 profile=h2/mysql 都能跑）======
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
+      repositories:
+        enabled: false   # 🆕 我们只用 StringRedisTemplate + Lua，禁用 Spring Data Redis Repository 扫描
+  cache:
+    type: simple          # 默认 simple（本地内存 ConcurrentMap）；Redis 可用时 profile 切 redis
+  # 注：Redis 缓存激活后改：
+  #   cache.type: redis
+  #   cache.redis.time-to-live: 300000  (5min)
+  #   cache.redis.cache-null-values: false
+
+  sql:
+    init:
+      mode: never
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+cors:
+  allowed-origins: "*"
+
+shop:
+  admin:
+    key: admin123
+  # 🆕 JWT 配置
+  jwt:
+    # HMAC-SHA256 key 必须 >= 256 bits (32 bytes)；生产环境应该走环境变量
+    secret: shop-jwt-secret-key-for-production-must-change-it-32chars
+    expire-minutes: 1440   # 24h
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    default-flat-param-object: true
+
+logging:
+  level:
+    com.shop.demo: debug
+    org.springframework.web: info

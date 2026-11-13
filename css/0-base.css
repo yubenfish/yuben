@@ -1,0 +1,49 @@
+/* =========================================================
+   0-base.css  —  设计变量 + 全局 Reset + 顶部促销横幅
+   ========================================================= */
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+img { max-width: 100%; display: block; }
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+/* ---------- 设计变量 ---------- */
+:root {
+  --primary: #ff4d4f;
+  --primary-dark: #d9363e;
+  --primary-light: #fff1f0;
+  --accent: #ff7a45;
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --text: #1a1a2e;
+  --text-secondary: #5a5a7a;
+  --text-muted: #9a9ab0;
+  --border: #eee;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --transition: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- Body ---------- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ---------- 顶部促销横幅 ---------- */
+.top-banner {
+  background: linear-gradient(90deg, #ff4d4f 0%, #ff7a45 100%);
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px 16px;
+  font-weight: 500;
+}
